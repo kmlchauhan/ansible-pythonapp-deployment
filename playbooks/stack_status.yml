@@ -1,0 +1,79 @@
+---
+- hosts: loadbalancer
+  become: true
+  tasks:
+    - name: Verify NGinx Service
+      command: service nginx status
+
+    - name: Verify NGinx is Listening on Port 80
+      wait_for:
+        port: 80
+        timeout: 1
+
+- hosts: webserver
+  become: true
+  tasks:
+    - name: Verify Apache2 Service
+      command: service apache2 status
+
+    - name: Verify Apache2 is Listening on Port 80
+      wait_for:
+        port: 80
+        timeout: 1
+
+- hosts: database
+  become: true
+  tasks:
+    - name: Verify MySQL Service
+      command: service mysql status
+
+    - name: Verify MySQL is Listening on Port 3306
+      wait_for:
+        host: {{ansible_enp0s8.ipv4.address}}
+        port: 3306
+        timeout: 1
+
+- hosts: controlmachine
+  tasks:
+    - name: Verify end-to-end Response
+      uri: url=http://{{item}} return_content=yes
+      with_items:
+        - "{{groups.loadbalancer}}"
+      register: lb_index
+
+    - fail: msg="index failed to return content"
+      when: "'Hello, from Kamal' not in item.content"
+      with_items: "{{lb_index.results}}"
+
+    - name: Verify end-to-end db Response
+      uri: url=http://{{item}}/db return_content=yes
+      with_items:
+        - "{{groups.loadbalancer}}"
+      register: db_lb
+
+    - fail: msg="db failed to return content"
+      when: "'Database Connected from' not in item.content"
+      with_items: "{{db_lb.results}}"
+
+- hosts: loadbalancer
+  tasks:
+    - name: Verify backend Response
+      uri: url=http://{{item}} return_content=yes
+      with_items:
+        - "{{groups.webserver}}"
+      register: app_index
+
+    - fail: msg="index failed to return content"
+      when: "'Hello, from Kamal {{item.item}}!' not in item.content"
+      with_items: "{{app_index.results}}"
+
+    - name: Verify backend db Response
+      uri: url=http://{{item}}/db return_content=yes
+      with_items:
+        - "{{groups.webserver}}"
+      register: db_web
+
+    - fail: msg="db failed to return content"
+      when: "'Database Connected from' not in item.content"
+      with_items: "{{db_web.results}}"
+

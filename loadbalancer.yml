@@ -1,34 +1,5 @@
 ---
 - hosts: loadbalancer
   become: true
-  tasks:
-    - name: Install Nginx
-      apt: name=nginx state=present update_cache=yes
-
-    - name: Ensure NGinx Started
-      service: name=nginx state=started enabled=yes
-
-    - name: Configure NGinx Site
-      template:
-        src: templates/nginx.conf.j2
-        dest: /etc/nginx/sites-available/demo
-        mode: 0644
-      notify: Restart NGinx
-
-    - name: De-Activate Default NGinx Site
-      file: 
-        path: /etc/nginx/sites-enabled/default
-        state: absent
-      notify: Restart NGinx
-
-    - name: Activate Demo NGinx Site
-      file:
-        src: /etc/nginx/sites-available/demo
-        dest: /etc/nginx/sites-enabled/demo
-        state: link
-      notify: Restart NGinx
-
-  handlers:
-    - name: Restart NGinx
-      service: name=nginx state=restarted
-
+  roles:
+    - nginx
