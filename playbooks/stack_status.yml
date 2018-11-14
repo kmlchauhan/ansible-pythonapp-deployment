@@ -1,6 +1,7 @@
 ---
 - hosts: loadbalancer
   become: true
+  gather_facts: false
   tasks:
     - name: Verify NGinx Service
       command: service nginx status
@@ -12,6 +13,7 @@
 
 - hosts: webserver
   become: true
+  gather_facts: false
   tasks:
     - name: Verify Apache2 Service
       command: service apache2 status
@@ -29,11 +31,12 @@
 
     - name: Verify MySQL is Listening on Port 3306
       wait_for:
-        host: {{ansible_enp0s8.ipv4.address}}
+        host: "{{ansible_enp0s8.ipv4.address}}"
         port: 3306
         timeout: 1
 
 - hosts: controlmachine
+  gather_facts: false
   tasks:
     - name: Verify end-to-end Response
       uri: url=http://{{item}} return_content=yes
@@ -56,6 +59,7 @@
       with_items: "{{db_lb.results}}"
 
 - hosts: loadbalancer
+  gather_facts: false
   tasks:
     - name: Verify backend Response
       uri: url=http://{{item}} return_content=yes

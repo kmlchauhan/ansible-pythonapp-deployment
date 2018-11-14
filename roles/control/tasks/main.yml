@@ -1,8 +1,9 @@
 ---
 # tasks file for control
 - name: Install Tools
-  apt: name={{item}} state=present update_cache=yes
+  apt: name={{item}} state=present
   with_items:
     - curl
     - tree
     - python-httplib2
+  tags: [ 'packages' ]

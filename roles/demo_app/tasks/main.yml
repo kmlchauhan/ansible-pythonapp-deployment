@@ -1,11 +1,12 @@
 ---
 # tasks file for demo_app
 - name: Install Apache2
-  apt: name={{item}} state=present update_cache=yes
+  apt: name={{item}} state=present
   with_items:
     - python-pip
     - python-virtualenv
     - python-mysqldb
+  tags: [ 'packages' ]
 
 - name: Copy Demo App Source
   copy:
@@ -13,6 +14,15 @@
     dest: /var/www/demo
     mode: 0755
   notify: Restart Apache2
+  tags: [ 'configure' ]
+
+- name: Copy demo.wsgi
+  template:
+    src: demo.wsgi.j2
+    dest: /var/www/demo/demo.wsgi
+    mode: 0755
+  notify: Restart Apache2
+  tags: [ 'configure' ]
 
 - name: Copy Apache Virtual Host Config
   copy:
@@ -20,12 +30,14 @@
     dest: /etc/apache2/sites-available
     mode: 0755
   notify: Restart Apache2
+  tags: [ 'configure' ]
 
 - name: Setup Python Virtualenv
   pip:
     requirements: /var/www/demo/requirements.txt
     virtualenv: /var/www/demo/.venv
   notify: Restart Apache2
+  tags: [ 'system' ]
 
 - name: Activate Demo Apache Site
   file:
@@ -33,4 +45,4 @@
     dest: /etc/apache2/sites-enabled/demo.conf
     state: link
   notify: Restart Apache2
-
+  tags: [ 'configure' ]

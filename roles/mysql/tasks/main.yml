@@ -1,15 +1,14 @@
 ---
 # tasks file for mysql
 - name: Install Tools
-  apt: name={{item}} state=present update_cache=yes
+  apt: name={{item}} state=present
   with_items:
     - python-mysqldb
+  tags: [ 'packages' ]
 
 - name: Install MySQL Server
-  apt: name=mysql-server state=present update_cache=yes
-
-- name: Ensure MySQL Started
-  service: name=mysql state=started enabled=yes
+  apt: name=mysql-server state=present
+  tags: [ 'packages' ]
 
 - name: Ensure MySQL Listening on All Ports
   lineinfile:
@@ -17,10 +16,23 @@
     regexp: ^bind-address
     line: "bind-address = {{ansible_enp0s8.ipv4.address}}"
   notify: Restart MySQL
+  tags: [ 'configure' ]
 
-- name: Create demo Database
-  mysql_db: name=demo state=present
+- name: Ensure MySQL Started
+  service: name=mysql state=started enabled=yes
+  tags: [ 'service' ]
 
-- name: Create demo User
-  mysql_user: name=demo password=demo priv=demo.*:ALL host='%' state=present
+- name: Create Database
+  mysql_db:
+    name: "{{db_name}}"
+    state: present
+  tags: [ 'configure' ]
 
+- name: Create User
+  mysql_user:
+    name: "{{db_user_name}}"
+    password: "{{db_user_pass}}"
+    priv: demo.*:ALL
+    host: '"{{db_user_host}}"'
+    state: present
+  tags: [ 'configure' ]

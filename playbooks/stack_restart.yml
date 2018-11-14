@@ -2,6 +2,7 @@
 # Bring Stack Down
 - hosts: loadbalancer
   become: true
+  gather_facts: false
   tasks:
     - service: name=nginx state=stopped
     - wait_for:
@@ -10,6 +11,7 @@
 
 - hosts: webserver
   become: true
+  gather_facts: false
   tasks:
     - service: name=apache2 state=stopped
     - wait_for:
@@ -22,13 +24,14 @@
   tasks:
     - service: name=mysql state=restarted
     - wait_for:
-        host: {{ansible_enp0s8.ipv4.address}}
+        host: "{{ansible_enp0s8.ipv4.address}}"
         port: 3306
         state: started
 
 # Bring Stack Up
 - hosts: webserver
   become: true
+  gather_facts: false
   tasks:
     - service:
         name: apache2
@@ -38,6 +41,7 @@
 
 - hosts: loadbalancer
   become: true
+  gather_facts: false
   tasks:
     - service:
         name: nginx

@@ -1,32 +1,47 @@
 ---
 # tasks file for nginx
 - name: Install Tools
-  apt: name={{item}} state=present update_cache=yes
+  apt: name={{item}} state=present
   with_items:
     - python-httplib2
+  tags: [ 'packages' ]
 
 - name: Install Nginx
-  apt: name=nginx state=present update_cache=yes
+  apt: name=nginx state=present
+  tags: [ 'packages' ]
 
 - name: Configure NGinx Site
   template:
     src: nginx.conf.j2
-    dest: /etc/nginx/sites-available/demo
+    dest: /etc/nginx/sites-available/{{ item.key }}
     mode: 0644
+  with_dict: "{{ sites }}"
   notify: Restart NGinx
+  tags: [ 'configure' ]
 
-- name: De-Activate Default NGinx Site
+- name: Get Active Sites
+  shell: ls -1 /etc/nginx/sites-enabled
+  register: active
+  tags: [ 'configure' ]
+
+- name: De-Activate Sites
   file:
-    path: /etc/nginx/sites-enabled/default
+    path: /etc/nginx/sites-enabled/{{ item }}
     state: absent
+  with_items: active.stdout_lines
+  when: item not in "{{ sites }}"
   notify: Restart NGinx
+  tags: [ 'configure' ]
 
-- name: Activate Demo NGinx Site
+- name: Activate NGinx Sites
   file:
-    src: /etc/nginx/sites-available/demo
-    dest: /etc/nginx/sites-enabled/demo
+    src: /etc/nginx/sites-available/{{ item.key }}
+    dest: /etc/nginx/sites-enabled/{{ item.key }}
     state: link
+  with_dict: "{{ sites }}"
   notify: Restart NGinx
+  tags: [ 'configure' ]
 
 - name: Ensure NGinx Started
   service: name=nginx state=started enabled=yes
+  tags: [ 'service' ]
