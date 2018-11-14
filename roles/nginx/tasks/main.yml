@@ -23,6 +23,7 @@
   shell: ls -1 /etc/nginx/sites-enabled
   register: active
   tags: [ 'configure' ]
+  changed_when: "active.stdout_lines != sites.keys()"
 
 - name: De-Activate Sites
   file:

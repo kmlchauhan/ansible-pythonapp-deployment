@@ -5,6 +5,7 @@
   tasks:
     - name: Verify NGinx Service
       command: service nginx status
+      changed_when: false
 
     - name: Verify NGinx is Listening on Port 80
       wait_for:
@@ -17,6 +18,7 @@
   tasks:
     - name: Verify Apache2 Service
       command: service apache2 status
+      changed_when: false
 
     - name: Verify Apache2 is Listening on Port 80
       wait_for:
@@ -28,6 +30,7 @@
   tasks:
     - name: Verify MySQL Service
       command: service mysql status
+      changed_when: false
 
     - name: Verify MySQL is Listening on Port 3306
       wait_for:
